@@ -1,4 +1,8 @@
+import datetime
+
 menu = """
+
+Seu saldo atual: {:.2f}
 
 [d] Depositar
 [s] Sacar
@@ -13,16 +17,22 @@ extrato = ""
 numero_saques = 0
 LIMITE_SAQUES = 3
 
+def para_extrato(tipo, valor):
+    agora = datetime.datetime.now() 
+    return f"{tipo}: R$ {valor:.2f} as {agora:%c}\n"
+
 while True:
 
-    opcao = input(menu)
+    opcao = input(menu.format(saldo))
+
+    
 
     if opcao == "d":
         valor = float(input("Informe o valor do depósito: "))
 
         if valor > 0:
             saldo += valor
-            extrato += f"Depósito: R$ {valor:.2f}\n"
+            extrato += para_extrato("Depósito", valor)
 
         else:
             print("Operação falhou! O valor informado é inválido.")
@@ -47,7 +57,7 @@ while True:
 
         elif valor > 0:
             saldo -= valor
-            extrato += f"Saque: R$ {valor:.2f}\n"
+            extrato += para_extrato("Saque", valor)
             numero_saques += 1
 
         else:
