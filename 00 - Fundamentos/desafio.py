@@ -19,7 +19,10 @@ LIMITE_SAQUES = 3
 
 def para_extrato(tipo, valor):
     agora = datetime.datetime.now() 
-    return f"{tipo}: R$ {valor:.2f} as {agora:%c}\n"
+    return f"{tipo.center(10)}: R$ {valor:.2f} as {agora:%c}\n"
+
+def falha_operacao(mensagem):
+    print(f"Operação falhou! {mensagem}.")    
 
 while True:
 
@@ -28,40 +31,39 @@ while True:
     
 
     if opcao == "d":
-        valor = float(input("Informe o valor do depósito: "))
 
-        if valor > 0:
-            saldo += valor
-            extrato += para_extrato("Depósito", valor)
-
+        try:
+            valor = float(input("Informe o valor do depósito: "))
+        except ValueError:
+            falha_operacao("O valor informado é incorreto")
         else:
-            print("Operação falhou! O valor informado é inválido.")
+            if valor > 0:
+                saldo += valor
+                extrato += para_extrato("Depósito", valor)
+            else:
+                falha_operacao("O valor informado é inválido")
 
     elif opcao == "s":
-        valor = float(input("Informe o valor do saque: "))
-
-        excedeu_saldo = valor > saldo
-
-        excedeu_limite = valor > limite
-
-        excedeu_saques = numero_saques >= LIMITE_SAQUES
-
-        if excedeu_saldo:
-            print("Operação falhou! Você não tem saldo suficiente.")
-
-        elif excedeu_limite:
-            print("Operação falhou! O valor do saque excede o limite.")
-
-        elif excedeu_saques:
-            print("Operação falhou! Número máximo de saques excedido.")
-
-        elif valor > 0:
-            saldo -= valor
-            extrato += para_extrato("Saque", valor)
-            numero_saques += 1
-
-        else:
-            print("Operação falhou! O valor informado é inválido.")
+        try:
+            valor = float(input("Informe o valor do saque: "))
+        except ValueError:
+            falha_operacao("Valor informado é incorreto")    
+        else:    
+            excedeu_saldo = valor > saldo
+            excedeu_limite = valor > limite
+            excedeu_saques = numero_saques >= LIMITE_SAQUES
+            if excedeu_saldo:
+                falha_operacao("Você não tem saldo suficiente")
+            elif excedeu_limite:
+                falha_operacao("O valor do saque excede o limite")
+            elif excedeu_saques:
+                falha_operacao("Número máximo de saques excedido")
+            elif valor > 0:
+                saldo -= valor
+                extrato += para_extrato("Saque", valor)
+                numero_saques += 1
+            else:
+                falha_operacao("O valor informado é inválido")
 
     elif opcao == "e":
         print("\n================ EXTRATO ================")
