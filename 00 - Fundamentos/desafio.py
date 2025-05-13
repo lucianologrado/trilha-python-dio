@@ -12,10 +12,11 @@ Seu saldo atual: {:.2f}
 => """
 
 saldo = 0
-limite = 500
+LIMITE_POR_SAQUE = 500
 extrato = ""
 numero_saques = 0
 LIMITE_SAQUES = 3
+MENSAGEM_VALOR_INVALIDO = "O valor informado é inválido"
 
 def para_extrato(tipo, valor):
     agora = datetime.datetime.now() 
@@ -29,6 +30,23 @@ def ler_valor(mensagem, valor_invalido = -1):
        return float(input(mensagem))
     except ValueError:
        return valor_invalido
+    
+def viola_regras_saque(saldo, valor, numero_saques):
+        valor_invalido = valor <= 0
+        excedeu_saldo = valor > saldo
+        excedeu_limite = valor > LIMITE_POR_SAQUE
+        excedeu_saques = numero_saques >= LIMITE_SAQUES
+        
+        if excedeu_saldo:
+            falha_operacao("Você não tem saldo suficiente")
+        elif excedeu_limite:
+            falha_operacao("O valor do saque excede o limite")
+        elif excedeu_saques:
+            falha_operacao("Número máximo de saques excedido")
+        elif valor_invalido:
+            falha_operacao(MENSAGEM_VALOR_INVALIDO)
+        return  valor_invalido or excedeu_limite or excedeu_saldo or excedeu_saques   
+
             
 
 while True:
@@ -44,27 +62,15 @@ while True:
             saldo += valor
             extrato += para_extrato("Depósito", valor)
         else:
-            falha_operacao("O valor informado é inválido")
+            falha_operacao(MENSAGEM_VALOR_INVALIDO)
 
     elif opcao == "s":
         valor = ler_valor("Informe o valor do depósito: ")
 
-        excedeu_saldo = valor > saldo
-        excedeu_limite = valor > limite
-        excedeu_saques = numero_saques >= LIMITE_SAQUES
-        
-        if excedeu_saldo:
-            falha_operacao("Você não tem saldo suficiente")
-        elif excedeu_limite:
-            falha_operacao("O valor do saque excede o limite")
-        elif excedeu_saques:
-            falha_operacao("Número máximo de saques excedido")
-        elif valor > 0:
+        if not viola_regras_saque(saldo, valor, numero_saques):
             saldo -= valor
             extrato += para_extrato("Saque", valor)
             numero_saques += 1
-        else:
-            falha_operacao("O valor informado é inválido")
 
     elif opcao == "e":
         print("\n================ EXTRATO ================")
