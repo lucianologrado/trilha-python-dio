@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 menu = """
 
@@ -19,7 +19,7 @@ LIMITE_SAQUES = 3
 MENSAGEM_VALOR_INVALIDO = "O valor informado é inválido"
 
 def para_extrato(tipo, valor):
-    agora = datetime.datetime.now() 
+    agora = datetime.now() 
     return f"{tipo.center(10)}: R$ {valor:.2f} as {agora:%c}\n"
 
 def falha_operacao(mensagem):

@@ -1,4 +1,5 @@
 import textwrap
+from datetime import datetime
 
 
 def menu():
@@ -14,11 +15,30 @@ def menu():
     => """
     return input(textwrap.dedent(menu))
 
+def ler_cpf(mensagem="Informe o CPF (somente número): "):
+    try:
+       cpf_lido = input(mensagem)
+       int(cpf_lido)
+       return cpf_lido
+    except ValueError:
+       print("\n=== CPF inválido! ===")
+       return None
+
+
+def ler_valor(mensagem, valor_invalido = -1):
+    try:
+       return float(input(mensagem))
+    except ValueError:
+       return valor_invalido
+
+def para_extrato(tipo, valor):
+    agora = datetime.now() 
+    return f"{tipo}:\tR$ {valor:.2f} as {agora:%c}\n"
 
 def depositar(saldo, valor, extrato, /):
     if valor > 0:
         saldo += valor
-        extrato += f"Depósito:\tR$ {valor:.2f}\n"
+        extrato += para_extrato("Depósito",valor)
         print("\n=== Depósito realizado com sucesso! ===")
     else:
         print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
@@ -42,7 +62,7 @@ def sacar(*, saldo, valor, extrato, limite, numero_saques, limite_saques):
 
     elif valor > 0:
         saldo -= valor
-        extrato += f"Saque:\t\tR$ {valor:.2f}\n"
+        extrato += para_extrato("Saque", valor)
         numero_saques += 1
         print("\n=== Saque realizado com sucesso! ===")
 
@@ -60,7 +80,9 @@ def exibir_extrato(saldo, /, *, extrato):
 
 
 def criar_usuario(usuarios):
-    cpf = input("Informe o CPF (somente número): ")
+    cpf = ler_cpf()
+    if not cpf:
+        return
     usuario = filtrar_usuario(cpf, usuarios)
 
     if usuario:
@@ -71,18 +93,20 @@ def criar_usuario(usuarios):
     data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
     endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
 
-    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+    usuarios[cpf] = {"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco}
 
     print("=== Usuário criado com sucesso! ===")
 
 
-def filtrar_usuario(cpf, usuarios):
-    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
-    return usuarios_filtrados[0] if usuarios_filtrados else None
+def filtrar_usuario(cpf, usuarios):    
+    return usuarios.get(cpf)
 
 
 def criar_conta(agencia, numero_conta, usuarios):
-    cpf = input("Informe o CPF do usuário: ")
+    cpf = ler_cpf("Informe o CPF do usuário: ")
+    if not cpf:
+        return
+
     usuario = filtrar_usuario(cpf, usuarios)
 
     if usuario:
@@ -111,19 +135,19 @@ def main():
     limite = 500
     extrato = ""
     numero_saques = 0
-    usuarios = []
+    usuarios = {}
     contas = []
 
     while True:
         opcao = menu()
 
         if opcao == "d":
-            valor = float(input("Informe o valor do depósito: "))
+            valor = ler_valor("Informe o valor do depósito: ")
 
             saldo, extrato = depositar(saldo, valor, extrato)
 
         elif opcao == "s":
-            valor = float(input("Informe o valor do saque: "))
+            valor = ler_valor("Informe o valor do saque: ")
 
             saldo, extrato = sacar(
                 saldo=saldo,
