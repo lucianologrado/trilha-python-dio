@@ -105,28 +105,34 @@ def filtrar_usuario(cpf, usuarios):
 def criar_conta(agencia, numero_conta, usuarios):
     cpf = ler_cpf("Informe o CPF do usuário: ")
     if not cpf:
-        return
+        return None, None
 
     usuario = filtrar_usuario(cpf, usuarios)
 
     if usuario:
         print("\n=== Conta criada com sucesso! ===")
-        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}, cpf
 
     print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")
+    return None, None
 
 
-def listar_contas(contas):
-    for conta in contas:
-        linha = f"""\
-            Agência:\t{conta['agencia']}
-            C/C:\t\t{conta['numero_conta']}
-            Titular:\t{conta['usuario']['nome']}
-        """
+def listar_contas(usuarios):
+    for usuario in usuarios.values():
         print("=" * 100)
-        print(textwrap.dedent(linha))
-
-
+        print(' ... Usuario: ',usuario.get("nome"), usuario.get("cpf"))
+        
+        contas = usuario.get("contas")
+        if contas:
+            for conta in contas:
+                linha = f"""\
+                    Agência:\t{conta['agencia']}
+                    C/C:\t\t{conta['numero_conta']}
+                    Titular:\t{conta['usuario']['nome']}
+                """
+                print(textwrap.dedent(linha))
+        else:
+            print("   Nenhuma conta registrada neste CPF ")
 def main():
     LIMITE_SAQUES = 3
     AGENCIA = "0001"
@@ -136,7 +142,7 @@ def main():
     extrato = ""
     numero_saques = 0
     usuarios = {}
-    contas = []
+    numero_ultima_conta = 0
 
     while True:
         opcao = menu()
@@ -165,14 +171,18 @@ def main():
             criar_usuario(usuarios)
 
         elif opcao == "nc":
-            numero_conta = len(contas) + 1
-            conta = criar_conta(AGENCIA, numero_conta, usuarios)
-
-            if conta:
-                contas.append(conta)
+            
+            conta, cpf = criar_conta(AGENCIA, numero_ultima_conta+1, usuarios)
+            if conta and cpf:
+                numero_ultima_conta = numero_ultima_conta + 1
+                usuario = usuarios[cpf]
+                usuario.setdefault("contas",[])
+                contas  = usuario["contas"] + [conta]
+                usuario["contas"] = contas
+                usuarios[cpf] = usuario                
 
         elif opcao == "lc":
-            listar_contas(contas)
+            listar_contas(usuarios)
 
         elif opcao == "q":
             break
