@@ -1,8 +1,18 @@
 import textwrap
-from abc import ABC, abstractclassmethod, abstractproperty
+from abc import ABC, abstractmethod
 from datetime import datetime
 
+CLIENTE_NAO_ENCONTRADO="\n@@@ Cliente não encontrado! @@@"
 
+def ler_cpf(mensagem="Informe o CPF do Cliente (somente numeros): "):
+    try:
+       cpf_lido = input(mensagem)
+       int(cpf_lido)
+       return cpf_lido
+    except ValueError:
+       print("\n=== CPF inválido! ===")
+       return None
+    
 class Cliente:
     def __init__(self, endereco):
         self.endereco = endereco
@@ -14,6 +24,13 @@ class Cliente:
     def adicionar_conta(self, conta):
         self.contas.append(conta)
 
+    def imprimir_contas(self):
+        for conta in self.contas:
+            print(conta)
+
+    def obter_conta(self, numero_conta):
+        conta_selecionada = [conta for conta in self.contas if conta.numero == numero_conta]
+        return conta_selecionada[0] if conta_selecionada else None
 
 class PessoaFisica(Cliente):
     def __init__(self, nome, data_nascimento, cpf, endereco):
@@ -135,13 +152,15 @@ class Historico:
 
 
 class Transacao(ABC):
+
     @property
-    @abstractproperty
+    @abstractmethod
     def valor(self):
         pass
 
-    @abstractclassmethod
-    def registrar(self, conta):
+    @classmethod
+    @abstractmethod
+    def registrar(cls, conta):
         pass
 
 
@@ -198,17 +217,28 @@ def recuperar_conta_cliente(cliente):
     if not cliente.contas:
         print("\n@@@ Cliente não possui conta! @@@")
         return
+    if len(cliente.contas) == 1:
+        return cliente.contas[0]
+    
+    cliente.imprimir_contas()    
+    numero_conta = int(input("Seleciona a conta que deseja usar: "))
+    conta = cliente.obter_conta(numero_conta)
 
-    # FIXME: não permite cliente escolher a conta
-    return cliente.contas[0]
+    if not conta:
+        print("\n@@@ Conta informada não existe! @@@")
+
+    return conta
 
 
 def depositar(clientes):
-    cpf = input("Informe o CPF do cliente: ")
+    cpf = ler_cpf()
+    if not cpf:
+        return
+
     cliente = filtrar_cliente(cpf, clientes)
 
     if not cliente:
-        print("\n@@@ Cliente não encontrado! @@@")
+        print(CLIENTE_NAO_ENCONTRADO)
         return
 
     valor = float(input("Informe o valor do depósito: "))
@@ -226,7 +256,7 @@ def sacar(clientes):
     cliente = filtrar_cliente(cpf, clientes)
 
     if not cliente:
-        print("\n@@@ Cliente não encontrado! @@@")
+        print(CLIENTE_NAO_ENCONTRADO)
         return
 
     valor = float(input("Informe o valor do saque: "))
@@ -244,7 +274,7 @@ def exibir_extrato(clientes):
     cliente = filtrar_cliente(cpf, clientes)
 
     if not cliente:
-        print("\n@@@ Cliente não encontrado! @@@")
+        print(CLIENTE_NAO_ENCONTRADO)
         return
 
     conta = recuperar_conta_cliente(cliente)
@@ -267,7 +297,9 @@ def exibir_extrato(clientes):
 
 
 def criar_cliente(clientes):
-    cpf = input("Informe o CPF (somente número): ")
+    cpf = ler_cpf()
+    if not cpf:
+        return
     cliente = filtrar_cliente(cpf, clientes)
 
     if cliente:
@@ -286,7 +318,9 @@ def criar_cliente(clientes):
 
 
 def criar_conta(numero_conta, clientes, contas):
-    cpf = input("Informe o CPF do cliente: ")
+    cpf = ler_cpf()
+    if not cpf:
+        return
     cliente = filtrar_cliente(cpf, clientes)
 
     if not cliente:
